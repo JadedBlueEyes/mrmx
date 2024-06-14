@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 
-mrml = { version = "4.0.0", git = "https://github.com/jdrouet/mrml.git"}
+mrml = { version = "4.0.0", git = "https://github.com/jdrouet/mrml.git", default-features = false, features = ["print"]}
 
 [dev-dependencies]
 expect-test = "1.5.0"
