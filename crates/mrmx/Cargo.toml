@@ -1,0 +1,16 @@
+[package]
+name = "mrmx"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+mrml = { version = "4.0.0", git = "https://github.com/jdrouet/mrml.git"}
+
+[dev-dependencies]
+expect-test = "1.5.0"
+
+mrmx-macros = { version = "0.1.0", path = "../mrmx-macros" }
