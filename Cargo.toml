@@ -2,3 +2,5 @@
 
 members = ["crates/*"]
 resolver = "2"
+
+package.repository = "https://github.com/JadedBlueEyes/mrmx/"
