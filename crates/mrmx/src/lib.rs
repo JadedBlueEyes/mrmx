@@ -1,3 +1,68 @@
+//! # mrmx
+//!
+//! The mrmx crate provides a JSX-like syntax for generating Mjml.
+//!
+//! It allows generating subsections of a document:
+//!
+//! ```
+//! # use mrmx_macros::view;
+//! view! { <mj-title>title</mj-title> };
+//! ```
+//!
+//! Complete documents:
+//!
+//! ```
+//! # use mrmx_macros::view;
+//! view! {
+//!     <mjml>
+//!         <mj-body>
+//!             <mj-text>Hello world!</mj-text>
+//!         </mj-body>
+//!     </mjml>
+//!    };
+//! ```
+//!
+//! And interpolating multiple trees:
+//!
+//!
+//! ```
+//! # use mrmx_macros::view;
+//! #
+//! let title = view! { <mj-title>title</mj-title> };
+//! view! {
+//!     <mjml>
+//!         <mj-head>
+//!             { title.into() }
+//!         </mj-head>
+//!         <mj-body>
+//!             <!-- "Single quotes must be contained in strings" -->
+//!             <mj-text>"Isn't this cool?"</mj-text>
+//!         </mj-body>
+//!     </mjml>
+//! };
+//! ```
+//!
+//! You can also embed blocks of arbitrary code inside trees:
+//!
+//! ```
+//! # use mrmx_macros::view;
+//! view! {
+//!     <mjml>
+//!         <mj-head>
+//!             <mj-title>title</mj-title>
+//!         </mj-head>
+//!         <mj-body> {
+//!             if 4 < 5 {
+//!                 view!{ <mj-button>"Maths works!"</mj-button> }.into()
+//!             } else {
+//!                 view!{ "Oh no!" }.into()
+//!             }
+//!         } </mj-body>
+//!     </mjml>
+//! };
+//! ```
+//!
+
 #[cfg(feature = "macros")]
 pub use mrmx_macros::view;
 
