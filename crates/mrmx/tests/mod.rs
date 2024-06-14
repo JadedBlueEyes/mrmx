@@ -1,6 +1,5 @@
 use expect_test::expect;
-use mrmx::WithAttribute;
-use mrmx_macros::view;
+use mrmx::{view, WithAttribute};
 
 #[test]
 fn basic_html() {

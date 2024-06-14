@@ -8,9 +8,15 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 
+mrmx-macros = { path = "../mrmx-macros", optional = true}
 mrml = { version = "4.0.0", git = "https://github.com/jdrouet/mrml.git", default-features = false, features = ["print"]}
 
 [dev-dependencies]
 expect-test = "1.5.0"
 
 mrmx-macros = { version = "0.1.0", path = "../mrmx-macros" }
+
+[features]
+
+default = ["macros"]
+macros = ["mrmx-macros"]

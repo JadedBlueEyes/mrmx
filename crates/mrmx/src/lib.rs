@@ -1,3 +1,6 @@
+#[cfg(feature = "macros")]
+pub use mrmx_macros::view;
+
 pub trait WithChildren {
     type Child;
 
