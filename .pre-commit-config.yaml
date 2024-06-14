@@ -48,6 +48,14 @@ repos:
         types: [file]
         pass_filenames: false
         stages: ["push"]
+      - id: readme
+        name: Update READMEs
+        description: Update READMEs with cargo-readme
+        entry: nu scripts/update-readmes.nu
+        language: system
+        types: [file]
+        pass_filenames: false
+        stages: ["commit"]
   - repo: https://github.com/crate-ci/typos
     rev: v1.22.0
     hooks:
