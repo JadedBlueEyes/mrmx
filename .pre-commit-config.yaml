@@ -50,7 +50,7 @@ repos:
         stages: ["push"]
       - id: readme
         name: Update READMEs
-        description: Update READMEs with cargo-readme
+        description: Update READMEs with cargo-rdme
         entry: nu scripts/update-readmes.nu
         language: system
         types: [file]
