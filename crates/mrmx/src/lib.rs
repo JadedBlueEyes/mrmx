@@ -75,8 +75,8 @@ pub trait WithChildren {
 impl<T> WithChildren for mrml::node::Node<T> {
     type Child = T;
 
-    fn with_children(mut self, children: Vec<T>) -> Self {
-        self.children = children;
+    fn with_children(mut self, mut children: Vec<T>) -> Self {
+        self.children.append(&mut children);
         self
     }
 }
@@ -142,8 +142,8 @@ macro_rules! with_children {
         impl WithChildren for $el {
             type Child = $ch;
 
-            fn with_children(mut self, children: Vec<$ch>) -> Self {
-                self.children = children;
+            fn with_children(mut self, mut children: Vec<$ch>) -> Self {
+                self.children.append(&mut children);
                 self
             }
         }
