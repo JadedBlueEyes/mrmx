@@ -307,7 +307,20 @@ impl WithAttribute for mrml::mj_style::MjStyle {
     }
 }
 
-// TODO: mrml::mj_font::MjFont
+impl WithAttribute for mrml::mj_font::MjFont {
+    fn with_attribute(mut self, key: String, value: String) -> Self {
+        if key == "name" {
+            self.attributes.name = value;
+            return self;
+        }
+        if key == "href" {
+            self.attributes.href = value;
+            return self;
+        }
+        // self.attributes.insert(key, value);
+        self
+    }
+}
 
 // mrml::mj_title::MjTitle
 // mrml::mj_preview::MjPreview
