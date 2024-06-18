@@ -33,15 +33,15 @@ fn element_children_to_tokens(nodes: &[Node], parent_type: TagType) -> Option<To
     })
 }
 
-fn fragment_to_tokens(nodes: &[Node], parent_type: TagType) -> Option<TokenStream> {
-    let children = children_to_tokens(nodes, parent_type);
+fn fragment_to_tokens(nodes: &[Node], _parent_type: TagType) -> Option<TokenStream> {
+    let children = children_to_tokens(nodes, TagType::Fragment);
     if children.is_empty() {
         None
     } else if children.len() == 1 {
         children.into_iter().next()
     } else {
         Some(quote! {
-            (#(#children),*)
+            vec![#(#children),*]
         })
     }
 }
@@ -57,6 +57,7 @@ fn children_to_tokens(nodes: &[Node], parent_type: TagType) -> Vec<TokenStream> 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) enum TagType {
     Root,
+    Fragment,
     Mjml,
     Html,
     MjmlAttributes,
