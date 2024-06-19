@@ -161,10 +161,6 @@ with_children!(mrml::mj_group::MjGroup, mrml::mj_body::MjBodyChild);
 with_children!(mrml::mj_hero::MjHero, mrml::mj_body::MjBodyChild);
 with_children!(mrml::mj_table::MjTable, mrml::mj_body::MjBodyChild);
 with_children!(mrml::mj_wrapper::MjWrapper, mrml::mj_body::MjBodyChild);
-with_children!(
-    mrml::mj_accordion::MjAccordion,
-    mrml::mj_accordion::MjAccordionChild
-);
 
 with_children!(
     mrml::mj_accordion_text::MjAccordionText,
@@ -183,6 +179,10 @@ with_children!(
 );
 
 with_children!(mrml::mj_accordion_title::MjAccordionTitle, mrml::text::Text);
+with_children!(
+    mrml::mj_accordion::MjAccordion,
+    mrml::mj_accordion::MjAccordionChild
+);
 with_children!(
     mrml::mj_carousel::MjCarousel,
     mrml::mj_carousel::MjCarouselChild
