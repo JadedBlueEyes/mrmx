@@ -1,4 +1,5 @@
 use expect_test::expect;
+use mrml::mj_body::MjBodyChild;
 use mrmx::{view, WithAttribute};
 
 #[test]
@@ -83,5 +84,19 @@ fn mjml_doc() {
       </mjml>
     };
 
+    expected.assert_eq(&format!("{actual:?}"))
+}
+
+#[test]
+fn fragment() {
+    let expected = expect![[
+        r#"Fragment { children: [Node(Node { tag: "p", attributes: Map({}), children: [Text(Text("Hello"))] }), Node(Node { tag: "p", attributes: Map({}), children: [Text(Text("world!"))] })] }"#
+    ]];
+    let actual: mrml::fragment::Fragment<MjBodyChild> = view! {
+      <>
+        <p>Hello</p>
+        <p>world!</p>
+      </>
+    };
     expected.assert_eq(&format!("{actual:?}"))
 }

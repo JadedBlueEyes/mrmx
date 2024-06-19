@@ -25,4 +25,4 @@ tracing = "0.1.40"
 
 [dev-dependencies]
 mrmx = { path = "../mrmx" }
-mrml = { version = "4.0.0", git = "https://github.com/jdrouet/mrml.git", default-features = false, features = ["print"]}
+mrml = { version = "4.0.0", git = "https://github.com/JadedBlueEyes/mrml.git", branch = "jade/fragment", default-features = false, features = ["print"]}

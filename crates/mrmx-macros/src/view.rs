@@ -36,12 +36,12 @@ fn element_children_to_tokens(nodes: &[Node], parent_type: TagType) -> Option<To
 fn fragment_to_tokens(nodes: &[Node], _parent_type: TagType) -> Option<TokenStream> {
     let children = children_to_tokens(nodes, TagType::Fragment);
     if children.is_empty() {
-        None
-    } else if children.len() == 1 {
-        children.into_iter().next()
+        Some(quote! {
+            ::mrml::fragment::Fragment::default()
+        })
     } else {
         Some(quote! {
-            vec![#(#children),*]
+            ::mrml::fragment::Fragment::from(vec![#(#children),*])
         })
     }
 }
