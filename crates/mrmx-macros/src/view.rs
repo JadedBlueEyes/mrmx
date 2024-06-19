@@ -1,11 +1,10 @@
-use convert_case::{
-    Case::{Pascal, Snake},
-    Casing,
-};
+use convert_case::Case::{Pascal, Snake};
+use convert_case::Casing;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use rstml::node::{KeyedAttribute, Node, NodeAttribute, NodeElement, NodeName};
-use syn::{parse_quote, spanned::Spanned, LitStr};
+use syn::spanned::Spanned;
+use syn::{parse_quote, LitStr};
 
 pub fn render_view(nodes: &[Node]) -> Option<TokenStream> {
     match nodes.len() {
