@@ -272,7 +272,6 @@ fn is_mjml_not_free_attributes(tag: &str) -> bool {
     // Keep list alphabetized for binary search
     [
         // "mj-breakpoint",
-        "mj-font",
         "mj-head",
         "mj-include",
         "mj-include-body",
