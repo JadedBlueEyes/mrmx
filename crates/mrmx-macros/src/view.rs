@@ -278,7 +278,6 @@ fn is_mjml_not_free_attributes(tag: &str) -> bool {
         "mj-include-head",
         "mj-preview",
         "mj-raw",
-        "mj-style",
         "mj-title",
     ]
     .binary_search(&tag)
