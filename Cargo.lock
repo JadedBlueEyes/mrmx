@@ -79,7 +79,7 @@ dependencies = [
 [[package]]
 name = "mrml"
 version = "4.0.0"
-source = "git+https://github.com/JadedBlueEyes/mrml.git?branch=jade/fragment#9a067be7ee3420f3150ccb70895e79df92e71d68"
+source = "git+https://github.com/JadedBlueEyes/mrml.git?branch=jade/fragment#bca0a0a219dc86a69e58a5eb195537492ad8b777"
 dependencies = [
  "enum_dispatch",
  "indexmap",
