@@ -1,6 +1,8 @@
-<!-- cargo-rdme start -->
+# MRMX
 
-# mrmx
+[![CI status](https://github.com/JadedBlueEyes/mrmx/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JadedBlueEyes/mrmx/actions/workflows/ci.yml?query=branch%3Amain) [![dependency status](https://deps.rs/repo/github/JadedBlueEyes/mrmx/status.svg?path=crates%2Fmrmx)](https://deps.rs/repo/github/JadedBlueEyes/mrmx?path=crates%2Fmrmx) [![Last commit](https://img.shields.io/github/last-commit/JadedBlueEyes/mrmx.svg?logo=github&logoColor=white)](https://github.com/JadedBlueEyes/mrmx/commits/main/) [![pre-commit enabled](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+
+<!-- cargo-rdme start -->
 
 The mrmx crate provides a JSX-like syntax for generating Mjml.
 

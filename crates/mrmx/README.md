@@ -1,6 +1,6 @@
-<!-- cargo-rdme start -->
-
 # mrmx
+
+<!-- cargo-rdme start -->
 
 The mrmx crate provides a JSX-like syntax for generating Mjml.
 

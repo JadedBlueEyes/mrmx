@@ -1,6 +1,6 @@
-<!-- cargo-rdme start -->
-
 # mrmx-macros
+
+<!-- cargo-rdme start -->
 
 This crate contains macros for generating [`mrml`](https://docs.rs/mrml/) using a JSX-like syntax.
 

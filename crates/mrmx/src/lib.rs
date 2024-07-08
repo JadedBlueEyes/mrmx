@@ -1,5 +1,3 @@
-//! # mrmx
-//!
 //! The mrmx crate provides a JSX-like syntax for generating Mjml.
 //!
 //! It allows generating subsections of a document:
