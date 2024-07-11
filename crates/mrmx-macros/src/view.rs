@@ -69,7 +69,10 @@ fn node_to_tokens(node: &Node, parent_type: TagType) -> Option<TokenStream> {
         Node::Comment(text) => Some(comment_to_tokens(&text.value)),
         Node::Text(text) => Some(text_to_tokens(&text.value)),
         Node::RawText(raw) => {
-            let text = raw.to_string_best();
+            let text = match raw.to_source_text(false) {
+                Some(val) => val,
+                None => raw.to_token_stream_string(),
+            };
             let text = syn::LitStr::new(&text, raw.span());
             Some(text_to_tokens(&text))
         }
@@ -117,20 +120,28 @@ pub(crate) fn element_to_tokens(node: &NodeElement, parent_type: TagType) -> Opt
         let snake = Ident::new(&convert_to_snake_case(tag.clone()), name.span());
         let pascal = Ident::new(&convert_to_pascal_case(tag.clone()), name.span());
         if is_mjml_text_element(&tag) {
-            let val = node
-                .children
-                .iter()
-                .map(|c| match c {
-                    Node::Text(t) => t.value_string(),
-                    Node::RawText(t) => t.to_string_best(),
-                    _ => proc_macro_error::abort!(
-                        node.span(),
-                        "Non-text nodes are not supported as children of text nodes"
-                    ),
-                })
-                .fold(String::new(), |a, b| a + &b + "");
+            if let Some(Node::Block(block)) = node.children.first() {
+                quote! { #[allow(unused_braces)] ::mrml::#snake::#pascal::from(#block) }
+            } else {
+                let val = node
+                    .children
+                    .iter()
+                    .filter_map(|c| match c {
+                        Node::Comment(_) => None,
+                        Node::Text(t) => Some(t.value_string()),
+                        Node::RawText(t) => Some(match t.to_source_text(false) {
+                            Some(val) => val,
+                            None => t.to_token_stream_string(),
+                        }),
+                        node => proc_macro_error::abort!(
+                            node.span(),
+                            "Non-text nodes are not supported as children of text nodes"
+                        ),
+                    })
+                    .fold(String::new(), |a, b| a + &b);
 
-            quote! { ::mrml::#snake::#pascal::from(#val) }
+                quote! { ::mrml::#snake::#pascal::from(#val) }
+            }
         } else {
             quote! { ::mrml::#snake::#pascal::default() }
         }
