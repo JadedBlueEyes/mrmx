@@ -2,7 +2,7 @@ use convert_case::Case::{Pascal, Snake};
 use convert_case::Casing;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
-use rstml::node::{KeyedAttribute, Node, NodeAttribute, NodeElement, NodeName};
+use rstml::node::{CustomNode, KeyedAttribute, Node, NodeAttribute, NodeElement, NodeName};
 use syn::spanned::Spanned;
 use syn::{parse_quote, LitStr};
 
@@ -19,7 +19,10 @@ pub fn render_view(nodes: &[Node]) -> Option<TokenStream> {
     }
 }
 
-fn element_children_to_tokens(nodes: &[Node], parent_type: TagType) -> Option<TokenStream> {
+fn element_children_to_tokens<C>(nodes: &[Node<C>], parent_type: TagType) -> Option<TokenStream>
+where
+    C: rstml::node::CustomNode,
+{
     let children = children_to_tokens(nodes, parent_type)
         .into_iter()
         .map(|child| {
@@ -32,7 +35,10 @@ fn element_children_to_tokens(nodes: &[Node], parent_type: TagType) -> Option<To
     })
 }
 
-fn fragment_to_tokens(nodes: &[Node], _parent_type: TagType) -> Option<TokenStream> {
+fn fragment_to_tokens<C>(nodes: &[Node<C>], _parent_type: TagType) -> Option<TokenStream>
+where
+    C: rstml::node::CustomNode,
+{
     let children = children_to_tokens(nodes, TagType::Fragment);
     if children.is_empty() {
         Some(quote! {
@@ -45,7 +51,10 @@ fn fragment_to_tokens(nodes: &[Node], _parent_type: TagType) -> Option<TokenStre
     }
 }
 
-fn children_to_tokens(nodes: &[Node], parent_type: TagType) -> Vec<TokenStream> {
+fn children_to_tokens<C>(nodes: &[Node<C>], parent_type: TagType) -> Vec<TokenStream>
+where
+    C: rstml::node::CustomNode,
+{
     let nodes = nodes
         .iter()
         .filter_map(|node| node_to_tokens(node, parent_type))
@@ -62,7 +71,10 @@ pub(crate) enum TagType {
     MjmlAttributes,
 }
 
-fn node_to_tokens(node: &Node, parent_type: TagType) -> Option<TokenStream> {
+fn node_to_tokens<C>(node: &Node<C>, parent_type: TagType) -> Option<TokenStream>
+where
+    C: rstml::node::CustomNode,
+{
     match node {
         Node::Fragment(fragment) => fragment_to_tokens(&fragment.children, parent_type),
         Node::Block(block) => Some(quote! { #block }),
@@ -97,7 +109,13 @@ fn comment_to_tokens(text: &LitStr) -> TokenStream {
     quote! { mrml::comment::Comment::from(#text) }
 }
 
-pub(crate) fn element_to_tokens(node: &NodeElement, parent_type: TagType) -> Option<TokenStream> {
+pub(crate) fn element_to_tokens<C>(
+    node: &NodeElement<C>,
+    parent_type: TagType,
+) -> Option<TokenStream>
+where
+    C: CustomNode,
+{
     let tag_type: TagType;
     let name = node.name();
     let tag = name.to_string();
@@ -164,7 +182,7 @@ pub(crate) fn element_to_tokens(node: &NodeElement, parent_type: TagType) -> Opt
 
     let self_closing = is_self_closing(node);
     let children = if !self_closing && !is_mjml_text_element(&tag) {
-        element_children_to_tokens(&node.children, tag_type)
+        element_children_to_tokens(node.children.as_slice(), tag_type)
     } else {
         if !is_mjml_text_element(&tag) && !node.children.is_empty() {
             let name = node.name();
@@ -222,7 +240,10 @@ fn attribute_to_tokens(tag_name: &str, node: &NodeAttribute, tag_type: TagType) 
     }
 }
 
-fn is_self_closing(node: &NodeElement) -> bool {
+fn is_self_closing<C>(node: &NodeElement<C>) -> bool
+where
+    C: CustomNode,
+{
     // self-closing tags
     // https://developer.mozilla.org/en-US/docs/Glossary/Empty_element
     // Keep list alphabetized for binary search
