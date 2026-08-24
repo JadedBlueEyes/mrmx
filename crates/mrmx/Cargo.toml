@@ -14,7 +14,7 @@ mrmx-macros = { path = "../mrmx-macros", optional = true}
 mrml = { version = "4.0.0", git = "https://github.com/JadedBlueEyes/mrml.git", branch = "jade/fragment", default-features = false, features = ["print", "fragment"]}
 
 [dev-dependencies]
-expect-test = "1.5.0"
+expect-test = "1.5.1"
 
 mrmx-macros = { version = "0.1.0", path = "../mrmx-macros" }
 

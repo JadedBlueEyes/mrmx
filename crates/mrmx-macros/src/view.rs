@@ -6,60 +6,74 @@ use rstml::node::{CustomNode, KeyedAttribute, Node, NodeAttribute, NodeElement, 
 use syn::spanned::Spanned;
 use syn::{parse_quote, LitStr};
 
-pub fn render_view(nodes: &[Node]) -> Option<TokenStream> {
+pub fn render_view(
+    nodes: &[Node],
+    emitter: &mut manyhow::Emitter,
+) -> manyhow::Result<Option<TokenStream>> {
     match nodes.len() {
         0 => {
             let span = Span::call_site();
-            Some(quote_spanned! {
+            Ok(Some(quote_spanned! {
                 span => ()
-            })
+            }))
         }
-        1 => node_to_tokens(&nodes[0], TagType::Root),
-        _ => fragment_to_tokens(nodes, TagType::Root),
+        1 => node_to_tokens(&nodes[0], TagType::Root, emitter),
+        _ => fragment_to_tokens(nodes, TagType::Root, emitter),
     }
 }
 
-fn element_children_to_tokens<C>(nodes: &[Node<C>], parent_type: TagType) -> Option<TokenStream>
+fn element_children_to_tokens<C>(
+    nodes: &[Node<C>],
+    parent_type: TagType,
+    emitter: &mut manyhow::Emitter,
+) -> manyhow::Result<Option<TokenStream>>
 where
     C: rstml::node::CustomNode,
 {
-    let children = children_to_tokens(nodes, parent_type)
+    let children = children_to_tokens(nodes, parent_type, emitter)?
         .into_iter()
         .map(|child| {
             quote! {
                 #child,
             }
         });
-    Some(quote! {
+    Ok(Some(quote! {
         #(#children)*
-    })
+    }))
 }
 
-fn fragment_to_tokens<C>(nodes: &[Node<C>], _parent_type: TagType) -> Option<TokenStream>
+fn fragment_to_tokens<C>(
+    nodes: &[Node<C>],
+    _parent_type: TagType,
+    emitter: &mut manyhow::Emitter,
+) -> manyhow::Result<Option<TokenStream>>
 where
     C: rstml::node::CustomNode,
 {
-    let children = children_to_tokens(nodes, TagType::Fragment);
+    let children = children_to_tokens(nodes, TagType::Fragment, emitter)?;
     if children.is_empty() {
-        Some(quote! {
+        Ok(Some(quote! {
             ::mrml::fragment::Fragment::default()
-        })
+        }))
     } else {
-        Some(quote! {
+        Ok(Some(quote! {
             ::mrml::fragment::Fragment::from(vec![#(#children),*])
-        })
+        }))
     }
 }
 
-fn children_to_tokens<C>(nodes: &[Node<C>], parent_type: TagType) -> Vec<TokenStream>
+fn children_to_tokens<C>(
+    nodes: &[Node<C>],
+    parent_type: TagType,
+    emitter: &mut manyhow::Emitter,
+) -> manyhow::Result<Vec<TokenStream>>
 where
     C: rstml::node::CustomNode,
 {
-    let nodes = nodes
-        .iter()
-        .filter_map(|node| node_to_tokens(node, parent_type))
-        .collect();
     nodes
+        .iter()
+        .filter_map(|node| node_to_tokens(node, parent_type, emitter).transpose())
+        .collect()
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -71,12 +85,16 @@ pub(crate) enum TagType {
     MjmlAttributes,
 }
 
-fn node_to_tokens<C>(node: &Node<C>, parent_type: TagType) -> Option<TokenStream>
+fn node_to_tokens<C>(
+    node: &Node<C>,
+    parent_type: TagType,
+    emitter: &mut manyhow::Emitter,
+) -> manyhow::Result<Option<TokenStream>>
 where
     C: rstml::node::CustomNode,
 {
-    match node {
-        Node::Fragment(fragment) => fragment_to_tokens(&fragment.children, parent_type),
+    let tt = match node {
+        Node::Fragment(fragment) => fragment_to_tokens(&fragment.children, parent_type, emitter)?,
         Node::Block(block) => Some(quote! { #block }),
         Node::Comment(text) => Some(comment_to_tokens(&text.value)),
         Node::Text(text) => Some(text_to_tokens(&text.value)),
@@ -88,10 +106,10 @@ where
             let text = syn::LitStr::new(&text, raw.span());
             Some(text_to_tokens(&text))
         }
-        Node::Element(node) => element_to_tokens(node, parent_type),
+        Node::Element(node) => element_to_tokens(node, parent_type, emitter)?,
         _ => None,
-    }
-    .map(|tt| -> TokenStream {
+    };
+    Ok(tt.map(|tt| -> TokenStream {
         if parent_type == TagType::Root {
             return tt;
         }
@@ -99,7 +117,7 @@ where
             Node::Block(_) => tt,
             _ => quote! {#tt.into()},
         }
-    })
+    }))
 }
 
 fn text_to_tokens(text: &LitStr) -> TokenStream {
@@ -112,7 +130,8 @@ fn comment_to_tokens(text: &LitStr) -> TokenStream {
 pub(crate) fn element_to_tokens<C>(
     node: &NodeElement<C>,
     parent_type: TagType,
-) -> Option<TokenStream>
+    emitter: &mut manyhow::Emitter,
+) -> manyhow::Result<Option<TokenStream>>
 where
     C: CustomNode,
 {
@@ -144,19 +163,20 @@ where
                 let val = node
                     .children
                     .iter()
-                    .filter_map(|c| match c {
-                        Node::Comment(_) => None,
-                        Node::Text(t) => Some(t.value_string()),
-                        Node::RawText(t) => Some(match t.to_source_text(false) {
+                    .map(|c| match c {
+                        Node::Comment(_) => Ok(None),
+                        Node::Text(t) => Ok(Some(t.value_string())),
+                        Node::RawText(t) => Ok(Some(match t.to_source_text(false) {
                             Some(val) => val,
                             None => t.to_token_stream_string(),
-                        }),
-                        node => proc_macro_error::abort!(
+                        })),
+                        node => manyhow::bail!(
                             node.span(),
                             "Non-text nodes are not supported as children of text nodes"
                         ),
                     })
-                    .fold(String::new(), |a, b| a + &b);
+                    .filter_map(|res| res.transpose())
+                    .collect::<manyhow::Result<String>>()?;
 
                 quote! { ::mrml::#snake::#pascal::from(#val) }
             }
@@ -170,11 +190,12 @@ where
 
     let attributes = node.attributes();
     let attributes = if attributes.len() == 1 {
-        Some(attribute_to_tokens(&tag, &attributes[0], tag_type))
+        Some(attribute_to_tokens(&tag, &attributes[0], tag_type)?)
     } else {
         let nodes = attributes
             .iter()
-            .map(|node| attribute_to_tokens(&tag, node, tag_type));
+            .map(|node| attribute_to_tokens(&tag, node, tag_type))
+            .collect::<manyhow::Result<Vec<_>>>()?;
         Some(quote! {
             #(#nodes)*
         })
@@ -182,41 +203,43 @@ where
 
     let self_closing = is_self_closing(node);
     let children = if !self_closing && !is_mjml_text_element(&tag) {
-        element_children_to_tokens(node.children.as_slice(), tag_type)
+        element_children_to_tokens(node.children.as_slice(), tag_type, emitter)?
     } else {
         if !is_mjml_text_element(&tag) && !node.children.is_empty() {
             let name = node.name();
-            proc_macro_error::emit_error!(
+            manyhow::emit!(
+                emitter,
                 name.span(),
-                format!(
-                    "Self-closing elements like <{name}> cannot have \
-                         children."
-                )
+                "Self-closing elements like <{name}> cannot have children."
             );
         };
         None
     };
 
     if let Some(children) = children.filter(|c| !c.is_empty()) {
-        Some(quote! {
+        Ok(Some(quote! {
             ::mrmx::WithChildren::with_children(
                 #name
                 #attributes,
                 vec![#children]
             )
-        })
+        }))
     } else {
-        Some(quote! {
+        Ok(Some(quote! {
             #name
             #attributes
-        })
+        }))
     }
 }
 
-fn attribute_to_tokens(tag_name: &str, node: &NodeAttribute, tag_type: TagType) -> TokenStream {
+fn attribute_to_tokens(
+    tag_name: &str,
+    node: &NodeAttribute,
+    tag_type: TagType,
+) -> manyhow::Result<TokenStream> {
     match node {
         NodeAttribute::Block(node) => {
-            proc_macro_error::abort!(
+            manyhow::bail!(
                 node.span(),
                 "Code blocks in attributes are not yet supported"
             )
@@ -226,15 +249,15 @@ fn attribute_to_tokens(tag_name: &str, node: &NodeAttribute, tag_type: TagType) 
                 let key = &node.key.to_string();
                 let none = parse_quote! { "" };
                 let value = &node.value().unwrap_or(&none);
-                quote! {
+                Ok(quote! {
                     .with_attribute(#key.to_string(), #value.to_string())
-                }
+                })
             } else {
                 let key = attribute_name(&node.key);
                 let value = attribute_value(node);
-                quote! {
+                Ok(quote! {
                     .#key(#value)
-                }
+                })
             }
         }
     }
